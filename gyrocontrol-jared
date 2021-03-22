@@ -1,0 +1,64 @@
+//GameControlArduinoCode
+
+#include<Wire.h>
+const int MPU_addr=0x68;  // I2C address of the MPU-6050
+int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
+int buzzer = 4;
+char incoming;
+
+void setup(){
+  pinMode(buzzer, OUTPUT);
+  Wire.begin(); //initiates wire library and joins I2C bus of arduino to MPU - This is START
+  Wire.beginTransmission(MPU_addr); // begins transmission to I2C slave device based on address - ACK from MPU
+  Wire.write(0x6B);  // first write selects register - PWR_MGMT_1 register
+  Wire.write(0);     // set to zero (wakes up the MPU-6050) per datasheet
+  Wire.endTransmission(true); //Ends transmission
+  Serial.begin(9600);
+}
+
+void buzz(){
+    digitalWrite(buzzer, HIGH);
+    delay(1000);
+    digitalWrite(buzzer, LOW);
+}
+
+
+void loop(){
+  Wire.beginTransmission(MPU_addr); 
+  Wire.write(0x43);  // starting with register 0x3B (ACCEL_XOUT_H) - every following write() writes to next register
+  Wire.endTransmission(false);
+  Wire.requestFrom(MPU_addr,14,true);  // request a total of 14 bytes for data read from MPU
+
+  // For each variable, 8bit data is read and shifted left 8bits - then second 8 bits are bitwise OR into LSBs
+  // Reads 14 bytes of data starting at 0x3B per the data sheet
+ 
+  GyX=Wire.read()<<8|Wire.read();  // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
+  GyY=Wire.read()<<8|Wire.read();  // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
+  GyZ=Wire.read()<<8|Wire.read();  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+
+  //Print Data Values to the serial port
+ if (Serial.available()) {
+    incoming = Serial.read();
+    if (incoming == 'E'){
+      buzz();
+    }
+ }
+    
+ if (GyX > 13500){
+    Serial.print("d\n");
+    delay(500);
+ }
+ else if (GyX < -13500){
+    Serial.print("u\n");
+    delay(500);
+ }
+    
+ if (GyY > 13500){
+    Serial.print("r\n");
+    delay(500);
+ }
+ else if (GyY < -13500){
+    Serial.print("l\n");
+    delay(500);
+ }
+}
