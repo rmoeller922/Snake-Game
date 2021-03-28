@@ -8,7 +8,7 @@ import serial
 # Note the serial port dev file name
 # need to change based on the particular host machine
 # TODO uncomment the following two lines to initialize serial port
-serialDevFile = 'COM6'
+serialDevFile = 'COM6' #use serial port COM6
 ser = serial.Serial(serialDevFile, 9600, timeout=0)
 
 delay = 0.1
@@ -104,20 +104,17 @@ wn.onkey(go_right, "d")
 # Main game loop
 while True:
     wn.update()
-
-    # TODO: notes by Prof. Luo
-    # you need to add your code to read control information from serial port
-    # then use that information to set head.direction
-    # For example,
-    # if control_information == 'w':
-    #     head.direction = "up"
-    # elif control_information == 's':
-    #     head.direction = "down"
-    # elif ......
-    #
+    
+    # reads serial monitor line into string
+    
     line = ser.readline()
+    
+    # prints string
+    
     print(line)
-
+    
+    # checks for letters in string to determine the direction of the input
+    
     if b'u' in line:
         head.direction = "up"
     if b'd' in line:
@@ -129,7 +126,7 @@ while True:
 
     # Check for a collision with the border
     if head.xcor() > 290 or head.xcor() < -290 or head.ycor() > 290 or head.ycor() < -290:
-        ser.write(b'R')
+        ser.write(b'R') # sends 'R' flag to serial monitor if game over
         time.sleep(1)
         head.goto(0, 0)
         head.direction = "stop"
@@ -154,10 +151,8 @@ while True:
         # Check for a collision with the food
     if head.distance(food) < 20:
 
-        # TODO: notes by Prof. Luo
-        # you need to send a flag to Arduino indicating an apple is eaten
-        # so that the Arduino will beep the buzzer
-        # Hint: refer to the example at Serial-RW/pyserial-test.py
+        # sends 'E' flag to serial monitor if apple is eaten 
+        
         ser.write(b'E')
 
         # Move the food to a random spot
@@ -203,7 +198,7 @@ while True:
     # Check for head collision with the body segments
     for segment in segments:
         if segment.distance(head) < 20:
-            ser.write(b'R')
+            ser.write(b'R') # sends 'R' flag to serial monitor if game over
             time.sleep(1)
             head.goto(0, 0)
             head.direction = "stop"
